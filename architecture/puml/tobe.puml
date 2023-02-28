@@ -1,0 +1,68 @@
+@startuml
+!theme silver
+
+skinparam actorStyle awesome
+skinparam ArrowColor green
+skinparam backgroundColor LightYellow
+
+cloud VK
+rectangle VkApi
+rectangle "Bot" {
+    component Dispatcher
+    component Keyboard {
+    rectangle MessageHandler
+    rectangle KeyboardScheme
+    rectangle Users
+    }
+    component User
+}
+
+rectangle "GameService" {
+    component Api
+}
+
+database RabbitMQ
+rectangle BackUpService {
+
+}
+database "Postgres" {
+   rectangle Admin
+   rectangle Game
+   rectangle BackUp
+}
+rectangle AdminService {
+    component GameSettings
+    component Auth
+}
+
+
+AdminService -> Admin
+AdminService -> GameService
+VK <-> VkApi
+VkApi <-> RabbitMQ
+RabbitMQ --> Dispatcher : 1. Новое message
+RabbitMQ <--- Dispatcher
+RabbitMQ <--> BackUpService
+BackUpService <--> Bot
+BackUpService <--> BackUp
+Dispatcher --> Keyboard #blue : 2. Создать базовую клавиатуру
+Dispatcher --> User #blue : 3. Создать User
+Dispatcher --> User : 4. Отправить в User message
+User --> MessageHandler : 5. Отправить в MessageHandler message
+MessageHandler -> KeyboardScheme : 6. Новый запрос
+KeyboardScheme -> Api : 7. CRUD
+Api -right-> Game : 8. CRUD
+Game -> Api : 9. Держи данные
+Api -> KeyboardScheme : 9. Данные по игровой сессии
+KeyboardScheme -> User : 10. Обновленная Клавиатура
+User -> Dispatcher: 11. Обновленная Клавиатура
+Dispatcher -up-> RabbitMQ : 12. Обновленная Клавиатура
+note bottom of BackUpService : "Задачи:\n1. Организация системы восстановления Bot"
+note bottom of Dispatcher : "Задачи:\n1. Создать User если пользователя еще нет.\n2. Перенаправить сообщение User.\n3. Проверить если среди активных клавиатур запрашиваемая,\n    если нет перенаправить в User в базовую клавиатуру."
+note bottom of Keyboard : "Задачи:\n1. Формирование новой клавиатуры на основе действий пользователя\nи игровой механики."
+note bottom of AdminService : "Задачи:\n1. Управление настройками бота.\n2. Управление правилами игры"
+note bottom of Postgres : "Задачи:\n1. BackUp - текущее состояния бота.\n2. Game - данные игры, сессии пользователи\n3. Admin - Данные админа"
+note bottom of GameService : "Задачи:\n1. Игровая механика игры на основе api.\n3. Отправка накопительной информации о играх в БД"
+note bottom of RabbitMQ : "Задачи:\n1. Обмен сообщениями между сервисами\n VKApi и Bot"
+note bottom of VkApi : "Задачи:\n1. Организация связи между Сервисом и VK"
+@enduml
