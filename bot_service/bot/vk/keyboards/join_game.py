@@ -44,21 +44,3 @@ async def button_back(bot: "Bot", message: MessageFromVK, *_: list, **__: dict):
         current_keyboard="JoinGameKeyboard",
         next_keyboard=RootKeyboard,
     )
-
-    #
-    # if old_keyboard := bot.get_keyboard_by_name("JoinGameKeyboard"):
-    #     old_keyboard.delete_user(message.user_id)
-    #
-    # keyboard = bot.get_keyboard_by_name("RootKeyboard")
-    # if not keyboard:
-    #     keyboard = RootKeyboard(bot=bot,
-    #                             name="RootKeyboard",
-    #                             timeout=bot.keyboard_expired,
-    #                             user_timeout=bot.user_expired,
-    #                             is_dynamic=False)
-    #     await keyboard.start()
-    #     bot.add_keyboard(keyboard)
-    #
-    # message.payload.keyboard_name = keyboard.name
-    # message.payload.button_name = None
-    # await keyboard.send_message_to_down(message)
