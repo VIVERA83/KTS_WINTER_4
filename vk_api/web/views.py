@@ -1,6 +1,5 @@
 from aiohttp.web_response import json_response
 from aiohttp_apispec import docs, querystring_schema, response_schema
-
 from core.componets import View
 from web.schemas import IDSchema, UserSchema
 

@@ -118,6 +118,7 @@ class MessageToVK:
             }
         )
 
+
 # @dataclass
 # class MessageFromVK:
 #     user_id: int

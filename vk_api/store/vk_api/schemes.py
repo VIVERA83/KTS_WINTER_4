@@ -8,13 +8,13 @@ from marshmallow_enum import EnumField
 from vk_api.store.vk_api.data_classes import (
     EventMessage,
     Message,
+    MessageFromVK,
+    MessageToVK,
     Object,
     Payload,
     TypeMessage,
     Update,
     VKResponse,
-    MessageFromVK,
-    MessageToVK,
 )
 
 objects = Union[

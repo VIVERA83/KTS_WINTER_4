@@ -56,14 +56,14 @@ class VkApiAccessor(BaseAccessor):
 
     async def _get_long_poll_service(self):
         async with self.session.get(
-                self._build_query(
-                    host=API_PATH,
-                    method="groups.getLongPollServer",
-                    params={
-                        "group_id": self.app.settings.vk.group_id,
-                        "access_token": self.app.settings.vk.token,
-                    },
-                )
+            self._build_query(
+                host=API_PATH,
+                method="groups.getLongPollServer",
+                params={
+                    "group_id": self.app.settings.vk.group_id,
+                    "access_token": self.app.settings.vk.token,
+                },
+            )
         ) as resp:
             data = (await resp.json())["response"]
             self.key = data["key"]
@@ -72,70 +72,70 @@ class VkApiAccessor(BaseAccessor):
 
     async def send_message(self, message: Message) -> None:
         async with self.session.get(
-                self._build_query(
-                    host=API_PATH,
-                    method="messages.send",
-                    params={
-                        "user_id": message.user_id,  # user
-                        "random_id": random.randint(1, 2 ** 32),
-                        "peer_id": "-" + str(self.app.settings.vk.group_id),
-                        "message": message.text,
-                        "access_token": self.app.settings.vk.token,
-                        "keyboard": message.keyboard,
-                    },
-                ),
+            self._build_query(
+                host=API_PATH,
+                method="messages.send",
+                params={
+                    "user_id": message.user_id,  # user
+                    "random_id": random.randint(1, 2 ** 32),
+                    "peer_id": "-" + str(self.app.settings.vk.group_id),
+                    "message": message.text,
+                    "access_token": self.app.settings.vk.token,
+                    "keyboard": message.keyboard,
+                },
+            ),
         ) as response:
             self.logger.debug(response.status)
 
     async def send_message_event_answer(self, message: EventMessage):
         async with self.session.get(
-                self._build_query(
-                    host=API_PATH,
-                    method="messages.sendMessageEventAnswer",
-                    params={
-                        "event_id": message.event_id,
-                        "user_id": message.user_id,
-                        "peer_id": message.peer_id,
-                        "event_data": json.dumps(
-                            {"text": message.event_data, "type": "show_snackbar"}
-                        ),
-                        "access_token": self.app.settings.vk.token,
-                        "keyboard": message.keyboard,
-                    },
-                ),
+            self._build_query(
+                host=API_PATH,
+                method="messages.sendMessageEventAnswer",
+                params={
+                    "event_id": message.event_id,
+                    "user_id": message.user_id,
+                    "peer_id": message.peer_id,
+                    "event_data": json.dumps(
+                        {"text": message.event_data, "type": "show_snackbar"}
+                    ),
+                    "access_token": self.app.settings.vk.token,
+                    "keyboard": message.keyboard,
+                },
+            ),
         ) as response:
             self.logger.debug(response.status)
 
     async def users_get(self, user_id: int):
         async with self.session.get(
-                self._build_query(
-                    host=API_PATH,
-                    method="users.get",
-                    params={
-                        "user_id": user_id,
-                        "access_token": self.app.settings.vk.token,
-                    },
-                )
+            self._build_query(
+                host=API_PATH,
+                method="users.get",
+                params={
+                    "user_id": user_id,
+                    "access_token": self.app.settings.vk.token,
+                },
+            )
         ) as response:
             data: dict[str, list[dict]] = await response.json()
             return (
-                    data.get("response")[0].get("first_name", "")
-                    + " "
-                    + data.get("response")[0].get("last_name", "")
+                data.get("response")[0].get("first_name", "")
+                + " "
+                + data.get("response")[0].get("last_name", "")
             )
 
     async def poll(self) -> list[Update]:
         async with self.session.get(
-                self._build_query(
-                    host=self.server,
-                    method="",
-                    params={
-                        "act": "a_check",
-                        "key": self.key,
-                        "ts": self.ts,
-                        "wait": 30,
-                    },
-                )
+            self._build_query(
+                host=self.server,
+                method="",
+                params={
+                    "act": "a_check",
+                    "key": self.key,
+                    "ts": self.ts,
+                    "wait": 30,
+                },
+            )
         ) as resp:
             data = await resp.json()
             vk_response: VKResponse = VKResponseSchema().load(data)

@@ -2,19 +2,11 @@ import pickle
 from typing import Optional
 
 from aio_pika import IncomingMessage, Message, connect
-from aio_pika.abc import (
-    AbstractChannel,
-    AbstractConnection,
-    AbstractQueue,
-)
+from aio_pika.abc import AbstractChannel, AbstractConnection, AbstractQueue
 from aio_pika.pool import Pool
 from base.base_accessor import BaseAccessor
-
-
-from store.vk_api.data_classes import MessageToVK, TypeMessage, EventMessage
+from store.vk_api.data_classes import EventMessage, MessageToVK, TypeMessage
 from store.vk_api.schemes import MessageToVKSchema
-
-
 
 
 class RabbitMQ(BaseAccessor):

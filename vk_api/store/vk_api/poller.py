@@ -2,9 +2,8 @@ import asyncio
 from asyncio import Task
 from typing import Optional
 
-from store.vk_api.data_classes import MessageFromVK, Payload
 from store import Store
-from store.vk_api.data_classes import TypeMessage
+from store.vk_api.data_classes import MessageFromVK, Payload, TypeMessage
 
 
 class Poller:
