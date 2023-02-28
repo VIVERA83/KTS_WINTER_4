@@ -7,13 +7,13 @@ from typing import Optional
 from aiohttp import TCPConnector
 from aiohttp.client import ClientSession
 
-from vk_api.base.base_accessor import BaseAccessor
-from vk_api.store.vk_api.data_classes import EventMessage, Message, Update, VKResponse
-from vk_api.store.vk_api.poller import Poller
-from vk_api.store.vk_api.schemes import VKResponseSchema
+from vk_api_sevice.base.base_accessor import BaseAccessor
+from vk_api_sevice.store.vk_api.data_classes import EventMessage, Message, Update, VKResponse
+from vk_api_sevice.store.vk_api.poller import Poller
+from vk_api_sevice.store.vk_api.schemes import VKResponseSchema
 
 if typing.TYPE_CHECKING:
-    from vk_api.core.app import Application
+    from vk_api_sevice.core.app import Application
 
 API_PATH = "https://api.vk.com/method/"
 

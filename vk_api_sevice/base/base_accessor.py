@@ -1,7 +1,7 @@
 import typing
 
 if typing.TYPE_CHECKING:
-    from vk_api.core.app import Application
+    from vk_api_sevice.core.app import Application
 
 
 class BaseAccessor:

@@ -5,7 +5,7 @@ import typing
 from loguru import logger
 
 if typing.TYPE_CHECKING:
-    from vk_api.core.componets import Application
+    from vk_api_sevice.core.componets import Application
 
 config = {
     "handlers": [

@@ -1,9 +1,11 @@
 from typing import Optional
 
 from aiohttp import web
+from core.settings import Settings
+from store import Store
+from store.rabbitmq.rabbitmq_accessor import RabbitMQ
 
-from vk_api.core.settings import Settings
-from vk_api.store import Store
+from bot.workers.dispatcher import Bot
 
 
 class Application(web.Application):
@@ -13,6 +15,10 @@ class Application(web.Application):
     settings: Optional["Settings"] = None
     #  ассессоры
     store: Optional["Store"] = None
+    # брокер сообщений
+    rabbitmq: Optional["RabbitMQ"] = None
+    # bot
+    bot: Optional["Bot"] = None
 
 
 class Request(web.Request):
@@ -25,6 +31,10 @@ class View(web.View):
     @property
     def request(self) -> Request:
         return super().request
+
+    @property
+    def bot(self) -> "Bot":
+        return self.request.app.bot
 
     @property
     def data(self) -> dict:
