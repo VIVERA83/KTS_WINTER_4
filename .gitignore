@@ -6,7 +6,7 @@ temp/
 .env_local
 # C extensions
 *.so
-
+.env_bot_local
 # Distribution / packaging
 .Python
 build/
