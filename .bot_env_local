@@ -1,0 +1,23 @@
+# Настройка приложения
+LOGGING_GURU="1"
+LOGGING_LEVEL="DEBUG"
+HOST="0.0.0.0"
+PORT=8010
+
+# RabbitMQ для приложения
+RABBITMQ__USER="user"
+RABBITMQ__PASSWORD="password"
+RABBITMQ__HOST="localhost"
+
+# RabbitMQ для докера
+RABBITMQ_DEFAULT_USER="user"
+RABBITMQ_DEFAULT_PASS="password"
+
+# Настройка Bot
+BOT__NAME="Bot"
+BOT__USER_EXPIRED=15
+BOT__KEYBOARD_EXPIRED=10
+
+# Настройка VKService
+VK_SERVICE__HOST="localhost"
+VK_SERVICE__PORT=8000
