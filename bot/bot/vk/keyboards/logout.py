@@ -28,12 +28,14 @@ class LogOutKeyboard(Keyboard):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.keyboard = KeyboardSchema(name="LogOutKeyboard", buttons=base_structure, one_time=False)
+        self.keyboard = KeyboardSchema(
+            name="LogOutKeyboard", buttons=base_structure, one_time=False
+        )
         self.button_handler = {
             "Ok": self.button_ok,
-
         }
 
     async def button_ok(self, message: "MessageFromVK") -> "KeyboardEventEnum":
         from bot.vk.keyboards.root import RootKeyboard
+
         return await self.redirect(keyboard=RootKeyboard, user_ids=[message.user_id])

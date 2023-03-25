@@ -7,3 +7,7 @@ class IDSchema(Schema):
 
 class UserSchema(Schema):
     username = fields.Str()
+
+
+class TimeOutSchema(Schema):
+    timeout = fields.Str(required=True)

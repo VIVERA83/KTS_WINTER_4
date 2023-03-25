@@ -28,24 +28,31 @@ class TeamIsReadyKeyboard(Keyboard):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.keyboard = KeyboardSchema(name="TeamIsReadyKeyboard", buttons=base_structure, one_time=False)
-        self.timeout_keyboard = TimeoutKeyboard(keyboard=RoundGameKeyboard,
-                                                user_ids=self.users,
-                                                is_dynamic=True,
-                                                is_private=True,
-                                                )
+        self.keyboard = KeyboardSchema(
+            name="TeamIsReadyKeyboard", buttons=base_structure, one_time=False
+        )
+        self.timeout_keyboard = TimeoutKeyboard(
+            keyboard=RoundGameKeyboard,
+            user_ids=self.users,
+            is_dynamic=True,
+            is_private=True,
+        )
 
     async def button_ready(self, message: "MessageFromVK") -> "KeyboardEventEnum":
         """Кнопка назначенная на Готов"""
         if message.payload.button_name == str(message.user_id) + "_":
             message.body = f"{self.get_user(message.user_id).name} ГОТОВ"
-            settings = self.get_keyboard_default_setting()
-            settings.buttons[message.payload.button_name] = not settings.buttons[message.payload.button_name]
+            settings = await self.get_keyboard_default_setting()
+            settings.buttons[message.payload.button_name] = not settings.buttons[
+                message.payload.button_name
+            ]
         else:
-            message.body = f"{self.get_user(message.user_id).name} не хорошо чужую кнопочку жать"
+            message.body = (
+                f"{self.get_user(message.user_id).name} не хорошо чужую кнопочку жать"
+            )
         return KeyboardEventEnum.select
 
-    def get_keyboard_default_setting(self) -> Union["TeamIsReady"]:
+    async def get_keyboard_default_setting(self) -> Union["TeamIsReady"]:
         """Настройки клавиатуры по умолчанию, место куда скидывают настройки по умолчанию для клавиатур"""
         settings = self.data.get("settings", TeamIsReady())
         for button_name in self.button_handler.keys():
@@ -58,10 +65,13 @@ class TeamIsReadyKeyboard(Keyboard):
         """Глобальное обновление клавиатуры"""
         await self.update_buttons()
         # если команда готова, переводи ее в игру
-        if all(self.get_keyboard_default_setting().buttons.values()):
-            await self.redirect(RoundGameKeyboard, deepcopy(self.users), is_dynamic=True, is_private=True, )
-
-
+        if all((await self.get_keyboard_default_setting()).buttons.values()):
+            await self.redirect(
+                RoundGameKeyboard,
+                deepcopy(self.users),
+                is_dynamic=True,
+                is_private=True,
+            )
 
     async def update_buttons(self):
         """Обновляем состояние кнопок, 1 кнопка 1 пользователь"""
@@ -83,11 +93,11 @@ class TeamIsReadyKeyboard(Keyboard):
             buttons[key] = [title, button]
             self.button_handler[str(user_id) + "_"] = self.button_ready
         self.keyboard.buttons = buttons
-        self.change_color()
+        await self.change_color()
 
-    def change_color(self):
+    async def change_color(self):
         """Меняет цвет кнопки, если кнопка есть в настройках мы ей задаем цвет"""
-        settings = self.get_keyboard_default_setting()
+        settings = await self.get_keyboard_default_setting()
         for buttons in self.keyboard.buttons.values():
             for button in buttons:
                 change = settings.buttons.get(button.name, None)

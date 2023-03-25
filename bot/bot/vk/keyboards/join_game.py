@@ -29,7 +29,9 @@ class JoinGameKeyboard(Keyboard):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.keyboard = KeyboardSchema(name=self.name, buttons=deepcopy(base_structure), one_time=False)
+        self.keyboard = KeyboardSchema(
+            name=self.name, buttons=deepcopy(base_structure), one_time=False
+        )
         self.button_handler = {
             "Назад": self.button_back,
         }
@@ -37,6 +39,7 @@ class JoinGameKeyboard(Keyboard):
     async def button_back(self, message: "MessageFromVK") -> "KeyboardEventEnum":
         """Вернуться в RootKeyboard"""
         from bot.vk.keyboards.root import RootKeyboard
+
         return await self.redirect(RootKeyboard, [message.user_id])
 
     async def event_update(self, message: MessageFromKeyboard):
@@ -72,7 +75,7 @@ class JoinGameKeyboard(Keyboard):
             if keyboard := self.bot.get_keyboard_by_name(keyboard_name):
                 if users := keyboard.users.copy():
                     if user := self.bot.get_user_by_id(users[0]):
-                        total = keyboard.get_setting_keyboard().players.value
+                        total = (await keyboard.get_setting_keyboard()).players.value
                         button = Button(
                             name=keyboard_name,
                             label=f"{user.name} {len(users)} из {total}",
@@ -93,11 +96,18 @@ class JoinGameKeyboard(Keyboard):
         buttons[len(buttons)] = deepcopy(base_structure[1])
         self.keyboard.buttons = buttons
 
-    async def button_join_command(self, message: "MessageFromVK") -> "KeyboardEventEnum":
-        if team_keyboard_server := self.bot.get_keyboard_by_name(message.payload.button_name):
+    async def button_join_command(
+        self, message: "MessageFromVK"
+    ) -> "KeyboardEventEnum":
+        if team_keyboard_server := self.bot.get_keyboard_by_name(
+            message.payload.button_name
+        ):
             user_name = self.get_user(message.user_id).name
-            return await self.redirect(team_keyboard_server, [message.user_id],
-                                       body=f"Присоединился к команде {user_name}")
+            return await self.redirect(
+                team_keyboard_server,
+                [message.user_id],
+                body=f"Присоединился к команде {user_name}",
+            )
         else:
             self.logger.warning("Team command keyboard is not available")
             # можем переправить на страничку, что типа извини команды набран,

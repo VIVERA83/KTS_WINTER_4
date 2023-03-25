@@ -2,6 +2,8 @@ import logging
 from asyncio import CancelledError, Queue
 from typing import Optional, Type, TYPE_CHECKING
 
+from icecream import ic
+
 from bot.data_classes import MessageFromVK, MessageToVK, MessageFromKeyboard
 from .keyboard import Keyboard
 from .poller import BasePoller
@@ -12,20 +14,18 @@ if TYPE_CHECKING:
 
 
 class Bot(BasePoller):
-    # keyboards_schemas: Optional[dict[str, Keyboard]] = {}
-
     def __init__(
-            self,
-            app: "Application",
-            name: str,
-            user_expired: int,  # время существования пользователя, пока он бездействует
-            keyboard_expired: int,  # время существования клавиатуру, пока в ней не происходят события
-            root_keyboard: Type[
-                Keyboard
-            ],  # Начальная клавиатура, точка входа для всех пользователей
-            queue_input: Queue[MessageFromVK] = Queue(),
-            queue_output: Queue[MessageToVK] = Queue(),
-            logger: Optional[logging.Logger] = None,
+        self,
+        app: "Application",
+        name: str,
+        user_expired: int,  # время существования пользователя, пока он бездействует
+        keyboard_expired: int,  # время существования клавиатуру, пока в ней не происходят события
+        root_keyboard: Type[
+            Keyboard
+        ],  # Начальная клавиатура, точка входа для всех пользователей
+        queue_input: Queue[MessageFromVK] = Queue(),
+        queue_output: Queue[MessageToVK] = Queue(),
+        logger: Optional[logging.Logger] = None,
     ):
         self.app = app
         self.name = name
@@ -34,46 +34,20 @@ class Bot(BasePoller):
         self.queue_input = queue_input
         # Очередь в которой лежат исходящие сообщения для VK
         self.queue_output = queue_output
-        # Подключённые User, key = user_id из VK
-        self.users: Optional[dict[int, User]] = {}
+
         # время жизни пользователя без активных действий
         self.user_expired = user_expired
         # время жизни клавиатуры без активных действий
         self.keyboard_expired = keyboard_expired
+
+        # Подключённые User, key = user_id из VK
+        self._users: Optional[dict[int, User]] = {}
         # Активные клавиатуры
         self._keyboards: Optional[dict[str, Keyboard]] = {}
         # Начальная клавиатура, стартовая позиция, а так же куда переносить если запрашиваемой
+
         self.root_keyboard = root_keyboard
         self.logger = logger or logging.getLogger(self.name)
-
-    async def get_user_name(self, user_id: int) -> str:
-        """
-        Получаем user.name по id пользователя из VK?
-        Данный метод переопределен в bot_accsessor.py в методе connect
-        """
-        return f"{self.name}, user_id={user_id}"
-
-    async def create_game_session(self, data: dict):
-        """
-            Данный метод переопределен в bot_accsessor.py в методе connect
-            example:
-            data = {"captain_id": 1,
-                    "users": [1, 2, 3,] # VK_user_id
-                    }
-            Временный Вариант
-        """
-
-    async def get_random_question(self) -> dict:
-        """
-            Данный метод переопределен в bot_accsessor.py в методе connect
-            example:
-            data = {"id": 41,
-                    "title": "Сколько будет 2+2х2=?",
-                    "correct_answer": "6",
-                    "rounds": []
-                   }
-            Временный Вариант
-        """
 
     async def create_user(self, user_id: int) -> User:
         """
@@ -86,16 +60,15 @@ class Bot(BasePoller):
             timeout=self.user_expired,
             logger=self.logger,
         )
-
         await user.start()
-        self.users[user_id] = user
+        self._users[user_id] = user
         return user
 
     async def delete_user(self, user_id: int):
         """
         Удаление пользователя
         """
-        if user := self.users.pop(user_id, None):
+        if user := self._users.pop(user_id, None):
             await user.stop()
             self.logger.debug(f"{self.name} delete user {user_id}")
         else:
@@ -105,15 +78,15 @@ class Bot(BasePoller):
         """
         Получить User из словарика активных пользователей
         """
-        return self.users.get(user_id, None)
+        return self._users.get(user_id, None)
 
     async def create_keyboard(
-            self,
-            keyboard_name: str,
-            keyboard: Type[Keyboard],
-            keyboard_timeout: int,
-            user_timeout: int,
-            is_dynamic: bool,
+        self,
+        keyboard_name: str,
+        keyboard: Type[Keyboard],
+        keyboard_timeout: int,
+        user_timeout: int,
+        is_dynamic: bool,
     ) -> Keyboard:
         """
         Создаётся клавиатуру и добавляется в словарик активных клавиатур.
@@ -152,16 +125,6 @@ class Bot(BasePoller):
         else:
             self.logger.error(f"{self.name}: keyboard not found : {keyboard_name}")
 
-    async def stop_all(self):
-        """Остановка всех User и Keyboards"""
-        for user in self.users.copy().values():
-            if user.is_running:
-                await user.stop()
-
-        for keyboard in self._keyboards.copy().values():
-            if keyboard.is_running:
-                await keyboard.stop()
-
     async def send_message_to_up(self, message: MessageToVK):
         """
         Отправить сообщение, наверх, в Данном случаи,
@@ -194,7 +157,7 @@ class Bot(BasePoller):
                 else:
                     self.logger.warning(f"Unknown message type: {message}")
         except CancelledError:
-            await self.stop_all()
+            self.logger.info(f"Dispatcher cancelled")
 
     async def vk_message_handler(self, message: MessageFromVK):
         """Обработка сообщений из VK"""
@@ -212,11 +175,8 @@ class Bot(BasePoller):
             user_timeout=self.user_expired,
             is_dynamic=False,
         )
-        # записываем название клавиатуры,
-        # в которую летит сообщение (при первом обращении  message.payload.keyboard_name = None)
+        # записываем название клавиатуры, в которую летит сообщение
         message.payload.keyboard_name = keyboard.name
-        # message.payload.button_name = None
-
         # отправляем пользователю сообщение
         await self.send_message_to_down(message)
 
@@ -226,3 +186,34 @@ class Bot(BasePoller):
             await keyboard.send_message_to_down(message)
         else:
             self.logger.error(f"Keyboard not found: {message.keyboard_name}")
+
+    # Переопределенные методы
+
+    async def get_user_name(self, user_id: int) -> str:
+        """
+        Получаем user.name по id пользователя из VK?
+        Данный метод переопределен в bot_accsessor.py в методе connect
+        """
+        return f"{self.name}, user_id={user_id}"
+
+    # async def create_game_session(self, data: dict):
+    #     """
+    #         Данный метод переопределен в bot_accsessor.py в методе connect
+    #         example:
+    #         data = {"captain_id": 1,
+    #                 "users": [1, 2, 3,] # VK_user_id
+    #                 }
+    #         Временный Вариант
+    #     """
+    #
+    # async def get_random_question(self) -> dict:
+    #     """
+    #         Данный метод переопределен в bot_accsessor.py в методе connect
+    #         example:
+    #         data = {"id": 41,
+    #                 "title": "Сколько будет 2+2х2=?",
+    #                 "correct_answer": "6",
+    #                 "rounds": []
+    #                }
+    #         Временный Вариант
+    #     """

@@ -1,12 +1,12 @@
 from copy import deepcopy
+
 from random import randint
 from typing import Optional
 
-from icecream import ic
-
+from api_game_www.data_classes import GameSessionRequest
 from bot.data_classes import KeyboardEventEnum, MessageFromVK, MessageFromKeyboard
 from bot.vk.keyboards.answer import AnswerKeyboard
-from bot.vk.keyboards.data_classes import Round, Data, TimeoutKeyboard
+from bot.vk.keyboards.data_classes import Data, TimeoutKeyboard, GameData, Round
 from bot.vk.keyboards.game_session_settings import GameSessionSettingKeyboard
 from bot.vk.vk_keyboard.buttons import Button, Title
 from bot.vk.vk_keyboard.data_classes import TypeColor
@@ -27,7 +27,7 @@ base_structure = {
             name="Вопрос",
             label="Вопрос",
             color=TypeColor.blue,
-            help_string="Первый в вписке это командир"
+            help_string="Первый в вписке это командир",
         ),
     ],
     2: [
@@ -35,21 +35,20 @@ base_structure = {
             name="Участник",
             label="Участник",
             color=TypeColor.white,
-            help_string="Первый капитан, зеленый - участник который будет отвечать, его назначает капитан"
+            help_string="Первый капитан, зеленый - участник который будет отвечать, его назначает капитан",
         ),
         Title(
             name="Вариант ответа",
             label="Вариант ответа",
             color=TypeColor.white,
-            help_string="Вариант ответа, на выбор"
+            help_string="Вариант ответа, на выбор",
         ),
         Title(
             name="Голосов в поддержку",
             label="Голосов в поддержку",
             color=TypeColor.white,
-            help_string="Количество участников которые придерживают предложенный вариант"
+            help_string="Количество участников которые придерживают предложенный вариант",
         ),
-
     ],
     3: [
         Button(
@@ -66,11 +65,15 @@ class RoundGameKeyboard(Keyboard):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.keyboard = KeyboardSchema(name="RootKeyboard", buttons=base_structure, one_time=False)
-        self.timeout_keyboard = TimeoutKeyboard(keyboard=AnswerKeyboard,
-                                                user_ids=deepcopy(self.users),
-                                                is_private=True,
-                                                )
+        self.keyboard = KeyboardSchema(
+            name=self.name, buttons=base_structure, one_time=False
+        )
+        self.timeout_keyboard = TimeoutKeyboard(
+            keyboard=AnswerKeyboard,
+            user_ids=deepcopy(self.users),
+            is_private=True,
+        )
+        self.settings: Optional["GameData"] = None
 
     async def event_new(self, message: MessageFromKeyboard) -> KeyboardEventEnum:
         await self.first_run_keyboard(message)
@@ -80,54 +83,61 @@ class RoundGameKeyboard(Keyboard):
         for buttons in self.keyboard.buttons.values():
             for button in buttons:
                 # обновляем Участников
-                if data := self.data["settings"].users.get(button.name):
+                if data := self.settings.round.users.get(button.name):
                     if data.value:
                         button.color = TypeColor.green
                     else:
                         button.color = TypeColor.blue
-                # обновляем голоса
-                elif data := self.data["settings"].votes.get(button.name):
+                elif data := self.settings.round.votes.get(button.name):
                     button.label = f"{sum(data.value.values())}"
 
     async def first_run_keyboard(self, message: MessageFromKeyboard):
         if self.is_first:
             if self.users:
                 self.is_first = False
-                self.data["settings"] = self.get_keyboard_default_setting()
-                self.data["settings"].number += 1
-                question = await self.bot.get_random_question()
-                self.data["settings"].id = question.get("id")
-                self.data["settings"].question = question.get("title")
-                self.data["settings"].correct_answer = question.get("correct_answer")
+                self.settings = await self.get_keyboard_default_setting()
+                self.settings.round.number += 1
+                # загружаем новый вопрос
+                self.settings.question = await self.bot.app.store.api_game_www.get_random_question()
+                # создаем кнопки, учитывая новые вводные данные
                 self.create_buttons()
-                # Создаем игровую сессию в БД
-                if not self.data["settings"].game_session_id:
-                    data = {"captain_id": self.users[0],
-                            "users": self.users,
-                            }
-                    self.data["settings"].game_session_id = (await self.bot.create_game_session(data)).get("id")
+                # Создается игровая сессия если до этого момента ее не было
+                if not self.settings.game_session.id:
+                    self.settings.game_session.id = (
+                        await self.bot.app.store.api_game_www.create_game_session(
+                            GameSessionRequest(
+                                captain_id=self.settings.capitan, users=self.users
+                            )
+                        )
+                    )
             else:
                 self.logger.error(f"The list of users is empty: {self.users}")
 
-    async def button_set_responding(self, message: "MessageFromVK") -> "KeyboardEventEnum":
+    async def button_set_responding(
+            self, message: "MessageFromVK"
+    ) -> "KeyboardEventEnum":
         """Назначить отвечающего на вопрос"""
         if message.user_id == self.users[0]:
-            for user_data in self.data["settings"].users.values():
+            for user_data in self.settings.round.users.values():
                 if message.payload.button_name == user_data.button_name:
                     user_data.value = True
                 else:
                     user_data.value = False
-            message.body = f"{self.get_user(message.user_id).name}: Назначил нового отвечающего"
+            message.body = (
+                f"{self.get_user(message.user_id).name}: Назначил нового отвечающего"
+            )
             return KeyboardEventEnum.update
         else:
-            message.body = f"{self.get_user(message.user_id).name}: Отвечающего на вопрос может " \
-                           f"назначить только капитан команды"
+            message.body = (
+                f"{self.get_user(message.user_id).name}: Отвечающего на вопрос может "
+                f"назначить только капитан команды"
+            )
             return KeyboardEventEnum.select
 
     async def button_set_vote(self, message: "MessageFromVK") -> "KeyboardEventEnum":
         """Передаем свой голос понравившемуся ответу"""
         try:
-            for vote in self.data["settings"].votes.values():
+            for vote in self.settings.round.votes.values():
                 if vote.button_name == message.payload.button_name:
                     if vote.value.get(message.user_id) == 1:
                         vote.value[message.user_id] = 0
@@ -136,14 +146,22 @@ class RoundGameKeyboard(Keyboard):
                 else:
                     vote.value[message.user_id] = 0
         except Exception as e:
-            ic(e)
+            self.logger.critical(str(e))
         return KeyboardEventEnum.update
 
-    async def button_answer(self, message: "MessageFromVK") -> "KeyboardEventEnum":  # noqa
+    async def button_answer(
+            self, message: "MessageFromVK"
+    ) -> "KeyboardEventEnum":  # noqa
         from bot.vk.keyboards.answer import AnswerKeyboard
-        if user_data := self.data["settings"].users.get(f"{message.user_id}"):
+
+        if user_data := self.settings.round.users.get(f"{message.user_id}"):
             if user_data.value:
-                return await self.redirect(AnswerKeyboard, deepcopy(self.users), is_private=True, kill_parent=self.name)
+                return await self.redirect(
+                    AnswerKeyboard,
+                    deepcopy(self.users),
+                    is_private=True,
+                    kill_parent=True,
+                )
             else:
                 message.body = f"{self.get_user(message.user_id).name}: Отвечать назначен другой участник команды"
         return KeyboardEventEnum.select
@@ -154,54 +172,58 @@ class RoundGameKeyboard(Keyboard):
             for button in buttons:
                 if button.name == f"{message.user_id}a":
                     button.label = message.body
-                    if answer := self.data["settings"].answers.get(f"{message.user_id}a"):
+                    if answer := self.settings.round.answers.get(f"{message.user_id}a"):
                         answer.value = message.body
                     break
         message.body = f"{self.get_user(message.user_id).name} : {message.body}"
         return KeyboardEventEnum.update
 
-    def get_keyboard_default_setting(self) -> "Round":
+    async def get_keyboard_default_setting(self) -> "GameData":
         """Достать настройки игры из пользователя из первого, тот кто создал игровую сессию"""
         try:
-            self.data["settings"] = self.get_user(self.users[0]).get_setting_keyboard(self.__class__.name)
-            if not self.data.get("settings"):
-                self.data["settings"] = Round()
-                self.data["settings"].session_setting = self.get_user(self.users[0]).get_setting_keyboard(
-                    GameSessionSettingKeyboard.name)
-                # Назначаем случайного капитана команды
-                if self.data["settings"].number == 0:
-                    self.choose_random_captain()
-        except Exception as e:
-            ic(e)
-        # Значение кнопок по умолчанию
-        try:
+            settings = self.get_user(self.users[0]).get_setting_keyboard(
+                self.__class__.name
+            )
+            if not settings:
+                settings = GameData(
+                    round=Round(number=0),
+                    game_session=self.get_user(self.users[0]).get_setting_keyboard(
+                        GameSessionSettingKeyboard.name
+                    ),
+                    capitan=self.choose_random_captain(),
+                    # question=await self.bot.app.store.api_game_www.get_random_question(),
+                )
             for key, user_id in enumerate(self.users, 3):
-                self.data["settings"].users[f"{user_id}"] = Data(value=True if key == 3 else False, row=key,
-                                                                 button_name=f"{user_id}")
-                self.data["settings"].answers[f"{user_id}a"] = Data(value="Нет ответа", row=key,
-                                                                    button_name=f"{user_id}a")
-                self.data["settings"].votes[f"{user_id}v"] = Data(value={}, row=key, button_name=f"{user_id}v")
-                user = self.get_user(user_id)
-                user.set_setting_keyboard(self.__class__.name, self.data["settings"])
+                settings.round.users[f"{user_id}"] = Data(
+                    value=True if key == 3 else False, row=key, button_name=f"{user_id}"
+                )
+                settings.round.answers[f"{user_id}a"] = Data(
+                    value="Нет ответа", row=key, button_name=f"{user_id}a"
+                )
+                settings.round.votes[f"{user_id}v"] = Data(
+                    value={}, row=key, button_name=f"{user_id}v"
+                )
+                #  сохраняем настойки клавиатуры в User
+                self.get_user(user_id).set_setting_keyboard(
+                    self.__class__.name, settings
+                )
+            return settings
         except Exception as e:
-            ic(e)
-        return self.data["settings"]
+            self.logger.critical(str(e))
 
-    def choose_random_captain(self):
+    def choose_random_captain(self) -> int:
         """Выбираем капитана"""
-        if not self.data["settings"].capitan:
-            self.users.insert(0, self.users.pop(randint(0, len(self.users) - 1)))
-            self.data["settings"].capitan = deepcopy(self.users[0])
+        self.users.insert(0, self.users.pop(randint(0, len(self.users) - 1)))
+        return deepcopy(self.users[0])
 
     def create_buttons(self):
         """Создаем кнопки с участниками игры"""
         try:
+            self.button_handler = {"Досрочный ответ": self.button_answer}
             buttons = deepcopy(base_structure)
-            buttons[1][0].label = self.data['settings'].question
-            buttons[1][0].help_string = self.data['settings'].question
-            self.button_handler = {
-                "Досрочный ответ": self.button_answer
-            }
+            buttons[1][0].label = self.settings.question.title
+            buttons[1][0].help_string = self.settings.question.title
+
             for key, user_id in enumerate(self.users, 3):
                 user = self.get_user(user_id)
                 button_user = Button(
@@ -223,10 +245,10 @@ class RoundGameKeyboard(Keyboard):
                 self.button_handler[f"{user_id}"] = self.button_set_responding
                 self.button_handler[f"{user_id}v"] = self.button_set_vote
             buttons[len(buttons)] = deepcopy(base_structure[len(base_structure) - 1])
-            buttons[0][0].label = f"{buttons[0][0].label} {self.data['settings'].number}"
+            buttons[0][0].label = f"{buttons[0][0].label} {self.settings.round.number}"
             buttons[0][
-                0].help_string = f"Текущий раунд {self.data['settings'].number} из {self.data['settings'].session_setting.rounds.value}"
+                0
+            ].help_string = f"Текущий раунд {self.settings.round.number} из {self.settings.game_session.rounds.value}"
             self.keyboard.buttons = buttons
         except Exception as e:
             self.logger.critical(e.args)
-        ic("Settings ok")
