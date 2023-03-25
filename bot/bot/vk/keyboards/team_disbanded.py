@@ -31,15 +31,20 @@ class TeamDisbandedKeyboard(Keyboard):
 
     def __init__(self, *args, **kwargs):
         from bot.vk.keyboards.logout import LogOutKeyboard
+
         super().__init__(*args, **kwargs)
-        self.keyboard = KeyboardSchema(name=self.name, buttons=base_structure, one_time=False)
+        self.keyboard = KeyboardSchema(
+            name=self.name, buttons=base_structure, one_time=False
+        )
         self.button_handler = {
             "Ок": self.button_ok,
         }
-        self.timeout_keyboard = TimeoutKeyboard(keyboard=LogOutKeyboard,
-                                                user_ids=self.users,
-                                                )
+        self.timeout_keyboard = TimeoutKeyboard(
+            keyboard=LogOutKeyboard,
+            user_ids=self.users,
+        )
 
     async def button_ok(self, message: MessageFromVK) -> "KeyboardEventEnum":
         from bot.vk.keyboards.root import RootKeyboard
+
         return await self.redirect(RootKeyboard, [message.user_id])

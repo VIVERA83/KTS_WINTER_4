@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Type, Union
 from dataclasses import dataclass, asdict, field
 
-from pamqp import body
+from api_game_www.data_classes import Question
 
 if TYPE_CHECKING:
     from bot.workers.keyboard import Keyboard
@@ -29,7 +29,7 @@ class TimeoutKeyboard:
     is_dynamic: bool = False
     is_private: bool = False
     body: str = "Переход в связи с окончанием времени"
-    settings: "GameSessionSettings" = None,
+    settings: "GameSessionSettings" = (None,)
 
     def as_dict(self) -> dict:
         return asdict(self)
@@ -39,6 +39,7 @@ class TimeoutKeyboard:
 class GameSessionSettings(BaseDataClass):
     players: "Data"
     rounds: "Data"
+    id: int = None
 
     @property
     def get_rows(self) -> dict[str, int]:
@@ -59,17 +60,19 @@ class TeamIsReady(BaseDataClass):
 
 @dataclass
 class Round:
-    number: int = 0
+    number: int
+    answer: str = None
     users: dict[str, "Data"] = field(default_factory=dict)
     answers: dict[str, "Data"] = field(default_factory=dict)
     votes: dict[str, "Data"] = field(default_factory=dict)
-    session_setting: GameSessionSettings = None
-    # TODO на будущие
-    game_session_id: int = False
-    capitan: int = None
-    question_id: int = None
-    question: str = None
-    correct_answer: str = None
-    answer: str = None
+
+
+
+@dataclass
+class GameData:
+    round: Round
+    game_session: GameSessionSettings
+    capitan: int
+    question: Question = None
     watcher: int = 0
     experts: int = 0

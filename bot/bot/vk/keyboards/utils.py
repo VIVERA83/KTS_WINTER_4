@@ -10,10 +10,10 @@ if TYPE_CHECKING:
 
 
 def change_color(
-        keyboard: Keyboard,
-        color_active: TypeColor,
-        color_disabled: TypeColor,
-        settings: Union["GameSessionSettings"],
+    keyboard: Keyboard,
+    color_active: TypeColor,
+    color_disabled: TypeColor,
+    settings: Union["GameSessionSettings"],
 ):
     """
     Меняем цвет кнопки, в колонке, а остальным назначаем другой цвет
@@ -24,8 +24,8 @@ def change_color(
     :return:
     """
     for (
-            button_name,
-            row,
+        button_name,
+        row,
     ) in settings.get_rows.items():
         buttons = keyboard.keyboard.buttons.get(row)
         for button in buttons:
@@ -33,4 +33,3 @@ def change_color(
                 button.color = color_active
             else:
                 button.color = color_disabled
-

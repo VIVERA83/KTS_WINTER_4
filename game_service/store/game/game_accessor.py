@@ -32,6 +32,7 @@ class GameAccessor(BaseAccessor):
                     .returning(QuestionModel)
                 )
                 result: ChunkedIteratorResult = await session.execute(query)  # noqa
+                await session.commit()
         return result.scalars().first()
 
     async def list_questions(self) -> list[Question]:
@@ -89,7 +90,7 @@ class GameAccessor(BaseAccessor):
                 .where(GameSessionModel.id == game_session_model.id)
             )
             result = await session.execute(stmt)
-
+            await session.commit()
         return result.unique().scalars().first()
 
     async def add_round(self, data: RoundData) -> RoundModel:

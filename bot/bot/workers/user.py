@@ -1,13 +1,11 @@
-import asyncio
 import logging
-from asyncio import Queue, CancelledError
+from asyncio import Queue, CancelledError, sleep
 from typing import TYPE_CHECKING, Optional, Union
 from time import monotonic
 
 from bot.data_classes import MessageFromVK, MessageToVK
-
 from .poller import BasePoller
-from ..vk.keyboards.data_classes import GameSessionSettings, Round
+from ..vk.keyboards.data_classes import GameSessionSettings, Round, Round, GameData
 
 if TYPE_CHECKING:
     from dispatcher import Bot
@@ -15,12 +13,12 @@ if TYPE_CHECKING:
 
 class User(BasePoller):
     def __init__(
-            self,
-            bot: "Bot",
-            user_id: int,
-            user_name: str,
-            timeout: int,
-            logger: Optional[logging.Logger] = None,
+        self,
+        bot: "Bot",
+        user_id: int,
+        user_name: str,
+        timeout: int,
+        logger: Optional[logging.Logger] = None,
     ):
         self.bot = bot
         self.user_id = user_id
@@ -35,15 +33,23 @@ class User(BasePoller):
         self.current_keyboard: Optional[str] = None
         self.is_running = False
         self.logger = logger or logging.getLogger(self.name)
+
         # место для хранения каких то данных
         self.data = {}
-        # пользователи, которые следят за ткущем пользователем
-        self.users = []
-        # клавиатуры, которые отслеживают состояние пользователя
-        self.tracked_objects = []
 
     async def poller_expired(self):
-        await super().poller_expired()
+        """Poller контролирует жизнь  User,
+        как только пользователь надолго теряет активность, пользователя удаляют из системы
+        """
+        while self.is_running:
+            try:
+                await sleep(self.timeout)
+            except CancelledError:
+                self.is_running = False
+
+            if (self.expired + self.timeout) < monotonic():
+                self.is_running = False
+
         # сообщаем клавиатуре, что мы закончились
         if keyboard := self.bot.get_keyboard_by_name(self.current_keyboard):
             await keyboard.delete_user(self.user_id)
@@ -56,9 +62,8 @@ class User(BasePoller):
         await self.bot.send_message_to_up(message)
 
     async def send_message_to_down(self, message: MessageFromVK):
-        """
-        Отправка сообщение в клавиатуру
-        """
+        """Отправка сообщение в клавиатуру"""
+        #  продлеваем таймаут
         self.expired = monotonic()
         keyboard = self.bot.get_keyboard_by_name(message.payload.keyboard_name)
         await keyboard.send_message_to_down(message)
@@ -70,17 +75,21 @@ class User(BasePoller):
         здесь идет работа с очередью queue_input"""
         while self.is_running:
             try:
-                await asyncio.sleep(self.timeout)
+                await sleep(self.timeout)
             except CancelledError:
                 self.is_running = False
         await self.bot.delete_user(self.user_id)
 
-    def get_setting_keyboard(self, keyboard_name: str) -> Union["GameSessionSettings", "Round"]:
+    def get_setting_keyboard(
+        self, keyboard_name: str
+    ) -> Union["GameSessionSettings", "GameData"]:
         """Вытаскиваем из User настройки Keyboard, они так же актуальны для игры, если они есть мы их возвращаем,
         иначе применяем настройки по умолчанию"""
         if settings := self.data.get(keyboard_name, None):
             return settings
 
-    def set_setting_keyboard(self, keyboard_name: str, settings: Union["GameSessionSettings"] = None):
+    def set_setting_keyboard(
+        self, keyboard_name: str, settings: Union["GameSessionSettings"] = None
+    ):
         """Сохраняем настройки клавиатуры"""
         self.data[keyboard_name] = settings

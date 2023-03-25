@@ -146,6 +146,7 @@ class QuestionGeRandomView(View):
         description="Получить случайный вопрос ```Что? Где? Когда?```", )
     @response_schema(QuestionSchema)
     async def get(self):
+
         questions = await self.store.game.list_questions()
         question = choice(questions)
         self.logger.debug(f"{self.__class__.__name__} : {len(questions)}")
@@ -164,13 +165,16 @@ class RoundAddViews(View):
     @request_schema(RoundRequestSchema)
     @response_schema(RoundSchema)
     async def post(self):
+        ic(self.data)
         round_number = await self.store.game.get_count_rounds(self.data.game_session_id) + 1
         try:
             is_correct = (await self.store.game.get_correct_answer(self.data.question_id)) == self.data.answer
         except NoResultFound:
+
             raise HTTPUnprocessableEntity(reason=f"The question with this id ({self.data.question_id}) not found",
                                           text=json.dumps(self.data.as_dict))
         round_data = RoundData(**self.data.as_dict, **{"round_number": round_number, "is_correct": is_correct})
         round_game = await self.store.game.add_round(round_data)
         self.logger.debug(f"{self.__class__.__name__} : {round_game}")
+
         return json_response(data=RoundSchema().dump(round_game.as_dataclass))

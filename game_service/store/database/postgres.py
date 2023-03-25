@@ -8,14 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engin
 from sqlalchemy.orm import DeclarativeBase, Mapped
 
 
-class Base:
-    __allow_unmapped__ = True
-
-
 class GameBase(DeclarativeBase):
-    __dataclass__: Union[
-        Type["User"], Type["GameSession"], Type["Round"], Type["Question"]
-    ] = None
+    __dataclass__: Union[Type["User"], Type["GameSession"], Type["Round"], Type["Question"]] = None
     metadata = MetaData(schema=Settings().postgres.db_schema)
     id: Optional[Mapped] = None
 

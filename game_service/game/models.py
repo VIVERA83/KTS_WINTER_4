@@ -1,4 +1,3 @@
-from ctypes import Union
 from dataclasses import dataclass
 
 from game.data_classes import GameSession, Question, Round, User

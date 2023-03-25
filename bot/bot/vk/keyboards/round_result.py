@@ -1,9 +1,9 @@
 from copy import deepcopy
+from typing import Optional
 
-from icecream import ic
-
+from api_game_www.data_classes import RoundRequest
 from bot.data_classes import KeyboardEventEnum, MessageFromVK, MessageFromKeyboard
-from bot.vk.keyboards.data_classes import TimeoutKeyboard, Round
+from bot.vk.keyboards.data_classes import TimeoutKeyboard, GameData
 from bot.vk.vk_keyboard.buttons import Button, Title
 from bot.vk.vk_keyboard.data_classes import TypeColor
 from bot.vk.vk_keyboard.keyboard import Keyboard as KeyboardSchema
@@ -24,7 +24,7 @@ base_structure = {
             name="Предварительный счет",
             label="Предварительный счет",
             color=TypeColor.white,
-            help_string="количество очков, заработанные командами зрителей и знатоков"
+            help_string="количество очков, заработанные командами зрителей и знатоков",
         ),
     ],
     2: [
@@ -32,13 +32,13 @@ base_structure = {
             name="Знатоки",
             label="Знатоки",
             color=TypeColor.green,
-            help_string="Общее количество очков кашей команды"
+            help_string="Общее количество очков кашей команды",
         ),
         Title(
             name="Зрители",
             label="Зрители",
             color=TypeColor.white,
-            help_string="Ошибки Вашей команды"
+            help_string="Ошибки Вашей команды",
         ),
     ],
     3: [
@@ -46,13 +46,13 @@ base_structure = {
             name="Очки знатоков",
             label="0",
             color=TypeColor.green,
-            help_string="И как вас результат"
+            help_string="И как вас результат",
         ),
         Title(
             name="Очки зрителей",
             label="0",
             color=TypeColor.red,
-            help_string="И как вас результат"
+            help_string="И как вас результат",
         ),
     ],
     4: [
@@ -67,28 +67,38 @@ base_structure = {
 
 class RoundResultKeyboard(Keyboard):
     name = "RoundResultKeyboard"
-    settings: "Round"
 
     def __init__(self, *args, **kwargs):
         from bot.vk.keyboards.round_game import RoundGameKeyboard
+
         super().__init__(*args, **kwargs)
-        self.keyboard = KeyboardSchema(name="RoundResultKeyboard", buttons=base_structure, one_time=False)
+        self.keyboard = KeyboardSchema(
+            name=self.name, buttons=base_structure, one_time=False
+        )
         self.button_handler = {"Ok": self.button_ok}
-        self.timeout_keyboard = TimeoutKeyboard(keyboard=RoundGameKeyboard,
-                                                user_ids=self.users,
-                                                is_private=True,
-                                                is_dynamic=True,
-                                                )
+        self.timeout_keyboard = TimeoutKeyboard(
+            keyboard=RoundGameKeyboard,
+            user_ids=self.users,
+            is_private=True,
+            is_dynamic=True,
+        )
+        self.settings: Optional["GameData"] = None
 
     async def button_ok(self, message: "MessageFromVK") -> "KeyboardEventEnum":
         from bot.vk.keyboards.root import RootKeyboard
-        if self.settings.session_setting.rounds.value <= self.settings.number:
-            await self.redirect(keyboard=RootKeyboard, user_ids=deepcopy(self.users), kill_parent=self.name)
+
+        if self.settings.game_session.rounds.value <= self.settings.round.number:
+            await self.redirect(
+                keyboard=RootKeyboard, user_ids=deepcopy(self.users), kill_parent=True
+            )
         else:
-            return await self.redirect(keyboard=self.timeout_keyboard.keyboard, user_ids=deepcopy(self.users),
-                                       is_private=True,
-                                       is_dynamic=True,
-                                       kill_parent=self.name)
+            return await self.redirect(
+                keyboard=self.timeout_keyboard.keyboard,
+                user_ids=deepcopy(self.users),
+                is_private=True,
+                is_dynamic=True,
+                kill_parent=True,
+            )
 
     async def event_new(self, message: MessageFromKeyboard) -> KeyboardEventEnum:
         await self.first_run_keyboard(message)
@@ -98,17 +108,23 @@ class RoundResultKeyboard(Keyboard):
         if self.is_first:
             if self.users:
                 self.is_first = False
-                self.settings = self.get_setting_keyboard()
-                self.is_end_game()
+                self.settings = await self.get_keyboard_default_setting()
                 self.create_buttons()
+                self.is_end_game()
+                self.bot.app.store.api_game_www.save_round_result(RoundRequest(
+                    respondent_id=self.settings.capitan,
+                    answer=self.settings.round.answer,
+                    question_id=self.settings.question.id,
+                    game_session_id=self.settings.game_session.id
+                ))
             else:
                 self.logger.error(f"The list of users is empty: {self.users}")
 
-    def get_keyboard_default_setting(self) -> "Round":
+    async def get_keyboard_default_setting(self) -> "GameData":
         """Достать настройки игры из пользователя из первого"""
         from bot.vk.keyboards.round_game import RoundGameKeyboard
-        self.settings = self.get_user(self.users[0]).get_setting_keyboard(RoundGameKeyboard.name)
-        return self.settings
+
+        return self.get_user(self.users[0]).get_setting_keyboard(RoundGameKeyboard.name)
 
     def create_buttons(self):
         """Создаем кнопки"""
@@ -116,7 +132,7 @@ class RoundResultKeyboard(Keyboard):
         buttons[3][0].label = f"{self.settings.experts}"
         buttons[3][1].label = f"{self.settings.watcher}"
 
-        if self.settings.session_setting.rounds.value <= self.settings.number:
+        if self.settings.game_session.rounds.value <= self.settings.round.number:
             buttons[0][0].label = "Итоговый результат игры"
             if self.settings.watcher < self.settings.experts:
                 buttons[1][0].label = "ПОБЕДА"
@@ -127,10 +143,18 @@ class RoundResultKeyboard(Keyboard):
             else:
                 buttons[1][0].label = "НИЧЬЯ"
                 buttons[1][0].color = TypeColor.blue
-
         self.keyboard.buttons = buttons
 
     def is_end_game(self):
         from bot.vk.keyboards.root import RootKeyboard
-        if self.settings.session_setting.rounds.value <= self.settings.number:
-            self.timeout_keyboard = TimeoutKeyboard(keyboard=RootKeyboard, user_ids=self.users)
+        if self.settings.game_session.rounds.value <= self.settings.round.number:
+            self.timeout_keyboard = TimeoutKeyboard(
+                keyboard=RootKeyboard, user_ids=self.users
+            )
+            for user_id in self.users:
+                settings = self.get_user(user_id).get_setting_keyboard(self.__class__.__name__)
+                settings.round.number = 0
+                settings.watcher = 0
+                settings.experts = 0
+                settings.question = None
+                settings.round.answer = None
