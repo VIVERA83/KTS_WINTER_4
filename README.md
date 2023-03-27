@@ -25,7 +25,7 @@ __Приложение разбито на 5 компонента__
   ```
     - Запускаем
   ```commandline
-  docker run --rm --name example_vk_api -p 8001:8001 -e VK__TOKEN="TOKEN" -e VK__GROUP_ID="210493394" -e RABBITMQ__USER="user" -e RABBITMQ__PASSWORD="password" -e  vk_api
+  docker run --rm --name example_vk_api -p 8001:8001 -e VK__TOKEN="TOKEN" -e VK__GROUP_ID="210493394" -e RABBITMQ__USER="user" -e RABBITMQ__PASSWORD="password" vk_api
   ```
 
 # [game_service](game_service)
