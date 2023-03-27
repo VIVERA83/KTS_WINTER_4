@@ -1,0 +1,8 @@
+aiohttp==3.8.4
+aiohttp_apispec==2.2.3
+pydantic==1.10.7
+python-dotenv==1.0.0
+aio_pika==9.0.5
+marshmallow_enum==1.5.1
+loguru==0.6.0
+
