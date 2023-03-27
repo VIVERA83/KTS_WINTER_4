@@ -4,6 +4,8 @@ from aio_pika import Message, connect
 from aio_pika.abc import AbstractChannel, AbstractConnection, AbstractQueue
 from base.base_accessor import BaseAccessor
 
+from base.backoff import before_execution
+
 if TYPE_CHECKING:
     from core.app import Application
 
@@ -13,7 +15,7 @@ class RabbitMQ(BaseAccessor):
     _channel: Optional[AbstractChannel] = None
 
     async def connect(self, app: "Application"):
-        self._connection = await connect(app.settings.rabbitmq.dns)
+        self._connection = await before_execution(logger=self.logger)(connect)(app.settings.rabbitmq.dns)
         self._channel = await self._connection.channel()
         self.logger.info("Connected to RabbitMQ")
 

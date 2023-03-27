@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, Optional
 
 from aio_pika import IncomingMessage
 from aiohttp import ClientSession, TCPConnector, ClientConnectorError
-from icecream import ic
 
 from base.base_accessor import BaseAccessor
 
@@ -24,7 +23,6 @@ class BotAccessor(BaseAccessor):
     def __init__(self, app: "Application", *args, **kwargs):
         super().__init__(app, *args, **kwargs)
         self._init_()
-        ic(self.app.store)
         self.bot = Bot(
             app=app,
             user_expired=app.settings.bot.user_expired,

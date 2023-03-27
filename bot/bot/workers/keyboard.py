@@ -5,8 +5,6 @@ from typing import TYPE_CHECKING, Callable, Optional, Union, Type
 from time import monotonic
 from asyncio import sleep
 
-from icecream import ic
-
 from bot.data_classes import (
     MessageFromVK,
     MessageToVK,
@@ -47,14 +45,14 @@ class Keyboard(BasePoller):
     ] = None
 
     def __init__(
-        self,
-        bot: "Bot",
-        name: str,
-        timeout: int,
-        user_timeout: int = None,
-        is_dynamic: bool = False,
-        logger: Optional[logging.Logger] = None,
-        timeout_keyboard: Optional["TimeoutKeyboard"] = None,
+            self,
+            bot: "Bot",
+            name: str,
+            timeout: int,
+            user_timeout: int = None,
+            is_dynamic: bool = False,
+            logger: Optional[logging.Logger] = None,
+            timeout_keyboard: Optional["TimeoutKeyboard"] = None,
     ):
         # ядро приложения
         self.bot = bot
@@ -122,7 +120,6 @@ class Keyboard(BasePoller):
             except CancelledError:
                 self.is_running = False
         if self.timeout_keyboard:
-            ic(self.timeout_keyboard.keyboard.name, self.timeout_keyboard.user_ids)
             self.timeout_keyboard.user_ids = deepcopy(self.users)
             await self.redirect(**self.timeout_keyboard.as_dict())
             self.timeout_keyboard = None
@@ -248,14 +245,13 @@ class Keyboard(BasePoller):
                 # рассылка сообщений по подписчикам
                 await self.send_message_to_all(message_to_vk, message_to_keyboard)
             except CancelledError:
-                break
-
+                self.is_running = False
         await self.bot.delete_keyboard(self.name)
 
     async def create_messages(
-        self,
-        event: KeyboardEventEnum,
-        message: Union[MessageFromVK, MessageFromKeyboard],
+            self,
+            event: KeyboardEventEnum,
+            message: Union[MessageFromVK, MessageFromKeyboard],
     ) -> ("MessageFromKeyboard", "MessageToVK"):
         user_id = (
             message.user_id
@@ -287,8 +283,7 @@ class Keyboard(BasePoller):
                 user_id=user_id,
                 body=message.body,
                 type=type_message,
-                event_data=event_data
-                or "Привет, ты был(а) долго не активен(а). Напиши чего ни будь",
+                event_data=event_data or "Привет, ты был(а) долго не активен(а). Напиши чего ни будь",
                 event_id=event_id,
                 peer_id=peer_id,
             )
@@ -311,7 +306,7 @@ class Keyboard(BasePoller):
         return KeyboardEventEnum.select
 
     async def keyboard_message_handler(
-        self, message: MessageFromKeyboard
+            self, message: MessageFromKeyboard
     ) -> KeyboardEventEnum:
         """Обрабатываем сообщений от клавиатур"""
         handler = self.event_handlers.get(message.keyboard_event.value)
@@ -355,7 +350,7 @@ class Keyboard(BasePoller):
             await self.send_message_to_up(message)
 
     async def send_message_to_all(
-        self, message_to_vk: MessageToVK, message_to_keyboard: MessageFromKeyboard
+            self, message_to_vk: MessageToVK, message_to_keyboard: MessageFromKeyboard
     ):
         """Отправка сообщений всем подписчикам"""
         # рассылаем сообщения по клавиатурам только если событие не SELECT
@@ -424,7 +419,7 @@ class Keyboard(BasePoller):
             # Означает что в нашей клавиатуре есть обновления, для тех кто подписан на нас
             return event
         except Exception as e:
-            ic(e)
+            self.logger.error(f"{self.__class__.__name__} : {e}")
 
     async def event_new(self, message: MessageFromKeyboard) -> KeyboardEventEnum:
         return KeyboardEventEnum.update
@@ -435,9 +430,7 @@ class Keyboard(BasePoller):
         self.bot.logger.debug(f"SELECT_EVENT {self.name} Complete, message: {message}")
         return event
 
-    async def event_select(
-        self, message: MessageFromKeyboard
-    ) -> KeyboardEventEnum:  # noqa
+    async def event_select(self, message: MessageFromKeyboard) -> KeyboardEventEnum:  # noqa
         """Обработка (реакция) события SELECT"""
         return KeyboardEventEnum.select
 
@@ -454,21 +447,21 @@ class Keyboard(BasePoller):
         return KeyboardEventEnum.select
 
     async def send_message_to_bot(
-        self, message: Union[MessageFromVK, MessageFromKeyboard]
+            self, message: Union[MessageFromVK, MessageFromKeyboard]
     ):
         """Сообщение для бота, данное сообщение будет обработано в inbound_message_handler"""
         await self.bot.queue_input.put(message)
 
     async def redirect(
-        self,
-        keyboard: Union[Type["Keyboard"], "Keyboard"],
-        user_ids: list[int],
-        keyboards: list[int] = None,
-        is_dynamic: bool = False,
-        is_private: bool = False,
-        body: str = None,
-        settings: "GameSessionSettings" = None,
-        kill_parent: bool = None,
+            self,
+            keyboard: Union[Type["Keyboard"], "Keyboard"],
+            user_ids: list[int],
+            keyboards: list[int] = None,
+            is_dynamic: bool = False,
+            is_private: bool = False,
+            body: str = None,
+            settings: "GameSessionSettings" = None,
+            kill_parent: bool = None,
     ) -> KeyboardEventEnum.new:
         """
         Переводит игрока или группу игроков в другую клавиатуру.
@@ -542,7 +535,7 @@ class Keyboard(BasePoller):
             return KeyboardEventEnum.select
 
     async def get_setting_keyboard(
-        self,
+            self,
     ) -> Union["GameSessionSettings", "TeamIsReady", "Round"]:
         """Вытаскиваем из User настройки Keyboard, они так же актуальны для игры, если они есть мы их возвращаем,
         иначе применяем настройки по умолчанию"""
@@ -555,7 +548,7 @@ class Keyboard(BasePoller):
             self.logger.error(f"User not found: {self.users[0]}")
 
     async def get_keyboard_default_setting(
-        self,
+            self,
     ) -> Union["GameSessionSettings", "Round"]:
         """Настройки клавиатуры по умолчанию, место куда скидывают настройки по умолчанию для клавиатур"""
 
@@ -578,7 +571,7 @@ class Keyboard(BasePoller):
                     )
 
     async def send_message_to_down(
-        self, message: Union["MessageFromVK", "MessageFromKeyboard"]
+            self, message: Union["MessageFromVK", "MessageFromKeyboard"]
     ):
         """
         Добавление в очередь сообщения на отправку вниз по иерархической ветке

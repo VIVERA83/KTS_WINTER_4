@@ -5,7 +5,7 @@ from time import monotonic
 
 from bot.data_classes import MessageFromVK, MessageToVK
 from .poller import BasePoller
-from ..vk.keyboards.data_classes import GameSessionSettings, Round, Round, GameData
+from ..vk.keyboards.data_classes import GameSessionSettings, GameData
 
 if TYPE_CHECKING:
     from dispatcher import Bot

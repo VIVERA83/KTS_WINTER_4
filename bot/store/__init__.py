@@ -1,7 +1,5 @@
 import typing
 
-from icecream import ic
-
 from store.bot.bot_accsessor import BotAccessor
 from store.rabbitmq.rabbitmq_accessor import RabbitMQ
 

@@ -17,28 +17,38 @@ class RabbitMQ(BaseModel):
 
 class Bot(BaseModel):
     name: str = "Bot"
-    user_expired: int = 5
-    keyboard_expired: int = 10
+    user_expired: int = 100
+    keyboard_expired: int = 60
 
 
 class VKService(BaseModel):
-    host: str
-    port: int
+    host: str = "0.0.0.0"
+    port: int = 8001
 
     @property
     def url(self) -> str:
         return f"http://{self.host}:{self.port}"
 
 
+class GameService(BaseModel):
+    host: str = "0.0.0.0"
+    port: int = 8002
+
+    @property
+    def url(self) -> str:
+        return f"http://{self.host}:{self.port}/"
+
+
 class Settings(BaseSettings):
     host: str = "localhost"
-    port: int = 8000
+    port: int = 8003
     logging_level: str
     logging_guru: bool
 
     rabbitmq: RabbitMQ
-    bot: Bot
-    vk_service: VKService
+    bot: Bot = Bot()
+    vk_service: VKService = VKService()
+    game_service: GameService = GameService()
 
     class Config:
         env_nested_delimiter = "__"

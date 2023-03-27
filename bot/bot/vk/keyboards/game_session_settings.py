@@ -89,14 +89,14 @@ class GameSessionSettingKeyboard(Keyboard):
     name = "GameSessionSettingKeyboard"
 
     def __init__(
-        self,
-        bot: "Bot",
-        name: str,
-        timeout: int,
-        user_timeout: int = None,
-        is_dynamic: bool = False,
-        logger: Optional[logging.Logger] = None,
-        timeout_keyboard: Optional["TimeoutKeyboard"] = None,
+            self,
+            bot: "Bot",
+            name: str,
+            timeout: int,
+            user_timeout: int = None,
+            is_dynamic: bool = False,
+            logger: Optional[logging.Logger] = None,
+            timeout_keyboard: Optional["TimeoutKeyboard"] = None,
     ):
         super().__init__(
             bot, name, timeout, user_timeout, is_dynamic, logger, timeout_keyboard
@@ -138,7 +138,7 @@ class GameSessionSettingKeyboard(Keyboard):
         return await self.redirect(RootKeyboard, [message.user_id])
 
     async def button_update_players(
-        self, message: MessageFromVK, value: int
+            self, message: MessageFromVK, value: int
     ) -> "KeyboardEventEnum":
         """Изменение количества игроков в игре и клавиатуры"""
         # Назначаем новое значение в настройках и в клавиатуре
@@ -148,7 +148,7 @@ class GameSessionSettingKeyboard(Keyboard):
         return KeyboardEventEnum.select
 
     async def button_update_rounds(
-        self, message: MessageFromVK, value: int
+            self, message: MessageFromVK, value: int
     ) -> "KeyboardEventEnum":
         """Изменение количества раундов в игре и клавиатуры"""
         # Назначаем новое значение в настройках и в клавиатуре
@@ -163,7 +163,6 @@ class GameSessionSettingKeyboard(Keyboard):
         from bot.vk.keyboards.join_game import JoinGameKeyboard
 
         # проверим если такая активная клавиатура, если нет создаем, она будет слушать TeamCompositionServerKeyboard
-
         self.bot.get_keyboard_by_name(
             JoinGameKeyboard.name
         ) or await self.bot.create_keyboard(

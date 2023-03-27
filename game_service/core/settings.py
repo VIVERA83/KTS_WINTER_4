@@ -29,7 +29,7 @@ class Settings(BaseSettings):
 
     logging_level: str = "INFO"
     logging_guru: bool = True
-    host: str = "localhost"
+    host: str = "0.0.0.0"
     port: int = 8100
 
     class Config:

@@ -14,7 +14,7 @@ def make_app() -> "Application":
     app.settings = Settings()
     setup_logging(app)
     setup_routes(app)
-    setup_aiohttp_apispec(app, title="bot", swagger_path="/docs")
+    setup_aiohttp_apispec(app, title="bot", swagger_path="/")
     setup_middlewares(app)
     setup_store(app)
     return app

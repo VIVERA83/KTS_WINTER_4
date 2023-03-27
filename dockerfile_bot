@@ -1,0 +1,28 @@
+FROM python:3.10.9-slim-buster
+WORKDIR bot
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+# Настройка приложения
+ENV LOGGING_GURU="1"
+ENV LOGGING_LEVEL="DEBUG"
+ENV HOST="0.0.0.0"
+ENV PORT=8003
+
+# RabbitMQ
+ENV RABBITMQ__USER=""
+ENV RABBITMQ__PASSWORD=""
+ENV RABBITMQ__HOST="host.docker.internal"
+
+# Настройка GameService
+ENV GAME_SERVICE__HOST="host.docker.internal"
+ENV GAME_SERVICE__PORT=8002
+
+# Настройка VKService
+ENV VK_SERVICE__HOST="host.docker.internal"
+ENV VK_SERVICE__PORT=8001
+
+RUN pip install --upgrade pip  --no-cache-dir
+COPY requirements_bot.txt .
+RUN pip install --no-cache-dir -r requirements_bot.txt
+COPY bot .
+CMD python main.py

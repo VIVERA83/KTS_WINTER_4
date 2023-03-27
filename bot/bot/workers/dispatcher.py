@@ -2,8 +2,6 @@ import logging
 from asyncio import CancelledError, Queue
 from typing import Optional, Type, TYPE_CHECKING
 
-from icecream import ic
-
 from bot.data_classes import MessageFromVK, MessageToVK, MessageFromKeyboard
 from .keyboard import Keyboard
 from .poller import BasePoller
@@ -15,17 +13,17 @@ if TYPE_CHECKING:
 
 class Bot(BasePoller):
     def __init__(
-        self,
-        app: "Application",
-        name: str,
-        user_expired: int,  # время существования пользователя, пока он бездействует
-        keyboard_expired: int,  # время существования клавиатуру, пока в ней не происходят события
-        root_keyboard: Type[
-            Keyboard
-        ],  # Начальная клавиатура, точка входа для всех пользователей
-        queue_input: Queue[MessageFromVK] = Queue(),
-        queue_output: Queue[MessageToVK] = Queue(),
-        logger: Optional[logging.Logger] = None,
+            self,
+            app: "Application",
+            name: str,
+            user_expired: int,  # время существования пользователя, пока он бездействует
+            keyboard_expired: int,  # время существования клавиатуру, пока в ней не происходят события
+            root_keyboard: Type[
+                Keyboard
+            ],  # Начальная клавиатура, точка входа для всех пользователей
+            queue_input: Queue[MessageFromVK] = Queue(),
+            queue_output: Queue[MessageToVK] = Queue(),
+            logger: Optional[logging.Logger] = None,
     ):
         self.app = app
         self.name = name
@@ -81,12 +79,12 @@ class Bot(BasePoller):
         return self._users.get(user_id, None)
 
     async def create_keyboard(
-        self,
-        keyboard_name: str,
-        keyboard: Type[Keyboard],
-        keyboard_timeout: int,
-        user_timeout: int,
-        is_dynamic: bool,
+            self,
+            keyboard_name: str,
+            keyboard: Type[Keyboard],
+            keyboard_timeout: int,
+            user_timeout: int,
+            is_dynamic: bool,
     ) -> Keyboard:
         """
         Создаётся клавиатуру и добавляется в словарик активных клавиатур.
@@ -192,28 +190,6 @@ class Bot(BasePoller):
     async def get_user_name(self, user_id: int) -> str:
         """
         Получаем user.name по id пользователя из VK?
-        Данный метод переопределен в bot_accsessor.py в методе connect
+        Данный метод переопределен в bot_accessor.py в методе connect
         """
         return f"{self.name}, user_id={user_id}"
-
-    # async def create_game_session(self, data: dict):
-    #     """
-    #         Данный метод переопределен в bot_accsessor.py в методе connect
-    #         example:
-    #         data = {"captain_id": 1,
-    #                 "users": [1, 2, 3,] # VK_user_id
-    #                 }
-    #         Временный Вариант
-    #     """
-    #
-    # async def get_random_question(self) -> dict:
-    #     """
-    #         Данный метод переопределен в bot_accsessor.py в методе connect
-    #         example:
-    #         data = {"id": 41,
-    #                 "title": "Сколько будет 2+2х2=?",
-    #                 "correct_answer": "6",
-    #                 "rounds": []
-    #                }
-    #         Временный Вариант
-    #     """

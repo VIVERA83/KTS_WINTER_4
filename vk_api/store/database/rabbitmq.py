@@ -13,6 +13,8 @@ from base.base_accessor import BaseAccessor
 from store.vk_api.data_classes import MessageToVK, TypeMessage
 from store.vk_api.schemes import MessageToVKSchema
 
+from base.backoff import before_execution
+
 
 class RabbitMQ(BaseAccessor):
     _connection_pool: Optional[Pool] = None
@@ -24,7 +26,8 @@ class RabbitMQ(BaseAccessor):
     output_queue_name = "vk_api_output"
 
     async def connect(self, *_: list, **__: dict):
-        self._connection = await connect(self.app.settings.rabbitmq.dns)
+        # Декоратор, который пытается подключиться к Rabbitmq
+        self._connection = await before_execution(logger=self.logger)(connect)(self.app.settings.rabbitmq.dns)
         self._channel = await self._connection.channel()
         self.output_queue = await self._channel.declare_queue(self.output_queue_name)
         self.input_queue = await self._channel.declare_queue(self.input_queue_name)

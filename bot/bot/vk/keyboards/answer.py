@@ -1,8 +1,6 @@
 from copy import deepcopy
 from typing import Optional
 
-from icecream import ic
-
 from bot.data_classes import KeyboardEventEnum, MessageFromVK, MessageFromKeyboard
 from bot.vk.keyboards.data_classes import TimeoutKeyboard, GameData
 from bot.vk.keyboards.round_result import RoundResultKeyboard
@@ -92,10 +90,7 @@ class AnswerKeyboard(Keyboard):
                     color=TypeColor.white,
                     help_string=help_string,
                 )
-                ic(
-                    self.settings.round.votes,
-                    sum(self.settings.round.votes[f"{user_id}v"].value.values()),
-                )
+
                 buttons[key] = [button_answer, button_vote]
                 self.button_handler[f"{user_id}a"] = self.button_answer
                 self.button_handler[f"{user_id}v"] = self.button_vote
