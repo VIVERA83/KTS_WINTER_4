@@ -11,7 +11,7 @@ if __name__ == "__main__":
         run_app(app, host=app.settings.host, port=app.settings.port)
     else:
         app.logger.error(f"""
-                One of the required parameters is not specified in the environment variables::
+                One of the required parameters is not specified in the environment variables:
                 VK__TOKEN
                 VK__GROUP_ID
                 RABBITMQ__USER
