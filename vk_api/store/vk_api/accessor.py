@@ -7,10 +7,10 @@ from typing import Optional
 from aiohttp import TCPConnector
 from aiohttp.client import ClientSession
 
-from vk_api.base.base_accessor import BaseAccessor
-from vk_api.store.vk_api.data_classes import EventMessage, Message, Update, VKResponse
-from vk_api.store.vk_api.poller import Poller
-from vk_api.store.vk_api.schemes import VKResponseSchema
+from base.base_accessor import BaseAccessor
+from store.vk_api.data_classes import EventMessage, Message, Update, VKResponse
+from store.vk_api.poller import Poller
+from store.vk_api.schemes import VKResponseSchema
 
 if typing.TYPE_CHECKING:
     from vk_api.core.app import Application

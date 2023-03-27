@@ -5,7 +5,7 @@ from typing import Optional, Type, Union
 from marshmallow import EXCLUDE, Schema, fields, post_load, pre_load
 from marshmallow_enum import EnumField
 
-from vk_api.store.vk_api.data_classes import (
+from store.vk_api.data_classes import (
     EventMessage,
     Message,
     Object,
