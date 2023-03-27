@@ -3,9 +3,7 @@ from core.app import make_app
 
 if __name__ == "__main__":
     app = make_app()
-    if all([app.settings.vk.token,
-            app.settings.vk.group_id,
-            app.settings.rabbitmq.host,
+    if all([app.settings.rabbitmq.host,
             app.settings.rabbitmq.user,
             app.settings.rabbitmq.password]):
         run_app(app, host=app.settings.host, port=app.settings.port)
