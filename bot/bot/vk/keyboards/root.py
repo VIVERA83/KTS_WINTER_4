@@ -1,5 +1,3 @@
-from icecream import ic
-
 from bot.data_classes import KeyboardEventEnum, MessageFromVK
 from bot.vk.vk_keyboard.buttons import Button, Title
 from bot.vk.vk_keyboard.data_classes import TypeColor

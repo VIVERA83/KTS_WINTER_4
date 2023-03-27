@@ -1,10 +1,8 @@
 from typing import Optional, TYPE_CHECKING
 from aiohttp import ClientSession, TCPConnector
-from icecream import ic
 
 from api_game_www.data_classes import GameSessionRequest, UserRequest, Question, RoundRequest
 from base.base_accessor import BaseAccessor
-from bot.vk.keyboards.data_classes import Round
 
 if TYPE_CHECKING:
     from core.app import Application
@@ -14,7 +12,7 @@ class WwwApiAccessor(BaseAccessor):
     def __init__(self, app: "Application", *args, **kwargs):
         super().__init__(app=app, *args, **kwargs)
         self.session: Optional[ClientSession] = None
-        self.url = "http://0.0.0.0:8100/"
+        self.url = self.app.settings.game_service.url
 
     async def connect(self, app: "Application"):
         self.session = ClientSession(connector=TCPConnector(verify_ssl=False))
@@ -37,7 +35,7 @@ class WwwApiAccessor(BaseAccessor):
         """Создание нового пользователя"""
         method = "add_user"
         async with self.session.post(self.url + method, data=user.as_dict) as resp:
-            ic(await resp.json())
+            self.logger.debug(f"{self.__class__.__name__} create_user: {resp.status}")
 
     async def get_random_question(self) -> Optional["Question"]:
         method = "get_random_question"
@@ -49,4 +47,4 @@ class WwwApiAccessor(BaseAccessor):
     async def save_round_result(self, round_result: "RoundRequest"):
         method = "add_game_round"
         async with self.session.post(self.url + method, data=round_result.as_dict) as resp:
-            ic(await resp.json())
+            self.logger.debug(f"{self.__class__.__name__} save_round_result: {resp.status}")

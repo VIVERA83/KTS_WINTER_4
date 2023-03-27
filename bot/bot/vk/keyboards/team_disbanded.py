@@ -1,5 +1,3 @@
-from copy import deepcopy
-
 from bot.data_classes import MessageFromVK, KeyboardEventEnum
 from bot.vk.keyboards.data_classes import TimeoutKeyboard
 from bot.vk.vk_keyboard.buttons import Button, Title

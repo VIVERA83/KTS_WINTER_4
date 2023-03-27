@@ -34,12 +34,14 @@ class TeamServerKeyboard(Keyboard):
     name = "TeamServerKeyboard"
 
     def __init__(self, *args, **kwargs):
+        print(self)
         super().__init__(*args, **kwargs)
         self.farewell_text = f"Команда расформирована"
         self.keyboard = KeyboardSchema(
             name=self.name, buttons=deepcopy(base_structure), one_time=False
         )
         self.settings: Optional[GameSessionSettings] = None
+        print(self)
 
     async def button_back(self, message: MessageFromVK) -> KeyboardEventEnum:
         from bot.vk.keyboards.join_game import JoinGameKeyboard
@@ -77,6 +79,7 @@ class TeamServerKeyboard(Keyboard):
         await self.update_buttons()
 
     async def event_new(self, message: MessageFromKeyboard) -> KeyboardEventEnum:
+        print(message)
         self.settings = await self.get_setting_keyboard()
         # если количество пользователей ровное для начала игры
         if self.settings.players.value == len(self.users):

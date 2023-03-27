@@ -1,17 +1,15 @@
 import json
 from typing import Optional
 
-from icecream import ic
-
 from .buttons import TYPE_BUTTON
 
 
 class Keyboard:
     def __init__(
-        self,
-        name: str,
-        buttons: Optional[dict[int, list[TYPE_BUTTON]]],
-        one_time: bool = True,
+            self,
+            name: str,
+            buttons: Optional[dict[int, list[TYPE_BUTTON]]],
+            one_time: bool = True,
     ):
         self.name = name
         self.one_time = one_time

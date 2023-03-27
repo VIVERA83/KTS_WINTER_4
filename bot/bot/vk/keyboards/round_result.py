@@ -111,7 +111,7 @@ class RoundResultKeyboard(Keyboard):
                 self.settings = await self.get_keyboard_default_setting()
                 self.create_buttons()
                 self.is_end_game()
-                self.bot.app.store.api_game_www.save_round_result(RoundRequest(
+                await self.bot.app.store.api_game_www.save_round_result(RoundRequest(
                     respondent_id=self.settings.capitan,
                     answer=self.settings.round.answer,
                     question_id=self.settings.question.id,

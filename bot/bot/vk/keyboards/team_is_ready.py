@@ -8,9 +8,7 @@ from bot.vk.vk_keyboard.buttons import Button, Title
 from bot.vk.vk_keyboard.data_classes import TypeColor
 from bot.vk.vk_keyboard.keyboard import Keyboard as KeyboardSchema
 from bot.workers.keyboard import Keyboard
-from icecream import ic
 
-ic.includeContext = True
 base_structure = {
     0: [
         Title(

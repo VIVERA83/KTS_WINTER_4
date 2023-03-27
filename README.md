@@ -71,4 +71,15 @@ __Приложение разбито на 5 компонента__
 - есть потенциал настройки бота для объединения пользователей из разных социальных сетей для общения
   (то есть пользователь из VK сможет общаться с пользователем из telegram) 
 
+Запуск:
+
+- Как отдельный сервис через Docker:
+    - Монтируем образ
+  ```commandline
+  docker build -f dockerfile_bot -t bot .
+  ```
+    - Запускаем
+  ```commandline
+  docker run --rm --name example_bot -p 8003:8003 -e RABBITMQ__USER="user" -e RABBITMQ__PASSWORD="password" bot
+  ```
 
