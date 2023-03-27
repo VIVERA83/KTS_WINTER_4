@@ -20,7 +20,6 @@ from game.schemas import (
     RoundRequestSchema,
     RoundSchema,
 )
-from icecream import ic
 
 
 class UserAddView(View):
@@ -133,7 +132,6 @@ class QuestionGetView(View):
     @response_schema(QuestionSchema)
     async def get(self):
         questions = await self.store.game.list_questions()
-        ic(questions)
         self.logger.debug(f"{self.__class__.__name__} : {len(questions)}")
         return json_response(data=QuestionSchema(many=True).dump(questions if questions else None))
 
@@ -146,7 +144,6 @@ class QuestionGeRandomView(View):
         description="Получить случайный вопрос ```Что? Где? Когда?```", )
     @response_schema(QuestionSchema)
     async def get(self):
-
         questions = await self.store.game.list_questions()
         question = choice(questions)
         self.logger.debug(f"{self.__class__.__name__} : {len(questions)}")
@@ -165,7 +162,6 @@ class RoundAddViews(View):
     @request_schema(RoundRequestSchema)
     @response_schema(RoundSchema)
     async def post(self):
-        ic(self.data)
         round_number = await self.store.game.get_count_rounds(self.data.game_session_id) + 1
         try:
             is_correct = (await self.store.game.get_correct_answer(self.data.question_id)) == self.data.answer

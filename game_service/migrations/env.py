@@ -3,13 +3,13 @@ from logging.config import fileConfig
 
 from alembic import context
 from core.settings import Settings
-from icecream import ic
 from sqlalchemy import engine_from_config, pool, text
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import AsyncEngine
 from store.database.postgres import GameBase
 
 config = context.config
+
 settings = Settings()
 
 if config.config_file_name is not None:
@@ -66,7 +66,6 @@ async def run_migrations_online() -> None:
         )
     )
     current_tenant = settings.postgres.db_schema
-    ic(current_tenant)
     async with connectable.connect() as connection:
         await connection.execute(
             text("CREATE SCHEMA IF NOT EXISTS %s" % current_tenant)

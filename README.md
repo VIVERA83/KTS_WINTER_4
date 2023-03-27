@@ -37,6 +37,28 @@ __Приложение разбито на 5 компонента__
 - Round: Результаты раунда, кто давал ответ, какой ответ, и верный ли был дан ответ, номер раунда
 - Question: Список вопросов
 
+Запуск:
+
+- Как отдельный сервис через Docker:
+    - Монтируем образ
+  ```commandline
+  docker build -f dockerfile_game_service -t game_service .
+  ```
+    - Запускаем
+  ```commandline
+  docker run --rm --name test_game_service -p 8002:8002 -e POSTGRES__DB="kts" -e POSTGRES__USER="kts_user" -e POSTGRES__PASSWORD="kts_pass" game_service
+  ```
+  Обратите внимание, что при первом запуске, требуется сделать миграцию:
+  
+     - Заходим в контейнер
+       ```commandline
+       docker exec -it test_game_service bash
+       ```
+     - Делаем миграцию
+       ```commandline
+       alembic upgrade head
+       ```
+
 # [bot](bot)
 
 Сердце приложения.

@@ -5,8 +5,7 @@ from typing import TYPE_CHECKING, Any, Optional
 from aiohttp.web import json_response as aiohttp_json_response
 from aiohttp.web_exceptions import HTTPException, HTTPUnprocessableEntity
 from aiohttp.web_response import Response
-from icecream import ic
-from sqlalchemy.exc import IntegrityError, NoResultFound
+from sqlalchemy.exc import IntegrityError
 
 if TYPE_CHECKING:
     from core.componets import Request

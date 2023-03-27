@@ -16,7 +16,6 @@ from game.models import (
     UserModel,
     RoundModel,
 )
-from icecream import ic
 from sqlalchemy import ChunkedIteratorResult, CursorResult, insert, select, func
 from sqlalchemy.orm import selectinload
 
@@ -41,7 +40,6 @@ class GameAccessor(BaseAccessor):
                 result = await session.execute(
                     select(QuestionModel.id, QuestionModel.title, QuestionModel.correct_answer))
             return [Question(*question, rounds=[]) for question in result.all()]
-
 
     async def add_user(self, user: UserRequest) -> UserModel:
         async with self.app.postgres.session.begin().session as session:

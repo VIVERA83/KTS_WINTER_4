@@ -1,0 +1,27 @@
+FROM python:3.10.9-slim-buster
+WORKDIR game_service
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+# Настройка приложения
+ENV LOGGING_LEVEL="DEBUG"
+ENV LOGGING_GURU="1"
+ENV HOST="0.0.0.0"
+ENV PORT=8002
+
+# Настройка Postgres
+ENV POSTGRES__DB=""
+ENV POSTGRES__USER=""
+ENV POSTGRES__PASSWORD=""
+ENV POSTGRES__HOST="host.docker.internal"
+ENV POSTGRES__PORT=5432
+ENV POSTGRES__DB_SCHEMA="game"
+# Настройка Apispec
+ENV APISPEC__TITLE="Что? Где? Когда?"
+ENV APISPEC__SWAGGER_PATH="/"
+
+RUN pip install --upgrade pip  --no-cache-dir
+COPY requirements_game_service.txt .
+RUN pip install --no-cache-dir -r requirements_game_service.txt
+COPY game_service .
+CMD python main.py
