@@ -9,12 +9,9 @@ from aio_pika.abc import (
 )
 from aio_pika.pool import Pool
 from base.base_accessor import BaseAccessor
-from icecream import ic
 
-from store.vk_api.data_classes import MessageToVK, TypeMessage, EventMessage
+from store.vk_api.data_classes import MessageToVK, TypeMessage
 from store.vk_api.schemes import MessageToVKSchema
-
-ic.includeContext = True
 
 
 class RabbitMQ(BaseAccessor):
@@ -37,11 +34,9 @@ class RabbitMQ(BaseAccessor):
             try:
                 data = pickle.loads(message.body)
                 message_to_vk: MessageToVK = MessageToVKSchema().load(data)
-                # ic(message_to_vk)
                 if message_to_vk.type.value == TypeMessage.message_new.value:
                     await self.app.store.vk_api.send_message(message_to_vk)
                 elif message_to_vk.type.value == TypeMessage.message_event.value:
-                    ic("ok")
                     await self.app.store.vk_api.send_message_event_answer(message_to_vk)
                 else:
                     raise TypeError("Unknown message type")
@@ -50,7 +45,7 @@ class RabbitMQ(BaseAccessor):
             finally:
                 await message.ack()
 
-        await self.output_queue.consume(on_output_queue)
+        await self.output_queue.consume(on_output_queue)  # noqa
 
     async def disconnect(self, *_: list, **__: dict):
         await self._connection.close()

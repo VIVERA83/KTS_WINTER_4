@@ -16,8 +16,8 @@ class RabbitMQ(BaseModel):
 
 
 class VK(BaseModel):
-    token: str
-    group_id: str
+    token: str = ""
+    group_id: str = ""
 
 
 class Settings(BaseSettings):

@@ -3,12 +3,12 @@ import typing
 from store.database.rabbitmq import RabbitMQ
 
 if typing.TYPE_CHECKING:
-    from vk_api.core.app import Application
+    from core.app import Application
 
 
 class Store:
     def __init__(self, app: "Application"):
-        from vk_api.store.vk_api.accessor import VkApiAccessor
+        from store.vk_api.accessor import VkApiAccessor
 
         self.vk_api = VkApiAccessor(app)
         self.rabbitmq = RabbitMQ(app)

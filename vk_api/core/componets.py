@@ -2,8 +2,8 @@ from typing import Optional
 
 from aiohttp import web
 
-from vk_api.core.settings import Settings
-from vk_api.store import Store
+from core.settings import Settings
+from store import Store
 
 
 class Application(web.Application):

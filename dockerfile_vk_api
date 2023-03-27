@@ -1,0 +1,23 @@
+FROM python:3.10.9-slim-buster
+WORKDIR vk_api
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+# Настройка приложения
+ENV LOGGING_GURU="1"
+ENV LOGGING_LEVEL="DEBUG"
+ENV HOST="0.0.0.0"
+ENV PORT=8001
+# VK API
+ENV VK__TOKEN=""
+ENV VK__GROUP_ID=""
+# RabbitMQ
+ENV RABBITMQ__USER=""
+ENV RABBITMQ__PASSWORD=""
+ENV RABBITMQ__HOST="host.docker.internal"
+
+
+RUN pip install --upgrade pip  --no-cache-dir
+COPY requirements_vk_api.txt .
+RUN pip install --no-cache-dir -r requirements_vk_api.txt
+COPY vk_api .
+CMD python main.py

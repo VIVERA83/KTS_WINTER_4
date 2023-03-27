@@ -2,8 +2,6 @@ import asyncio
 from asyncio import Task
 from typing import Optional
 
-from icecream import ic
-
 from store.vk_api.data_classes import MessageFromVK, Payload
 from store import Store
 from store.vk_api.data_classes import TypeMessage
