@@ -55,7 +55,8 @@ __Приложение разбито на 5 компонента__
   ```commandline
   docker run --rm --name test_game_service -p 8002:8002 -e POSTGRES__DB="kts" -e POSTGRES__USER="kts_user" -e POSTGRES__PASSWORD="kts_pass" game_service
   ```
-  Обратите внимание, что при первом запуске, требуется сделать миграцию:
+  Обратите внимание, что при первом запуске, требуется сделать миграцию. Перед миграцией необходимо в Postgres 
+создать одноименную роль и бд.
   
      - Заходим в контейнер
        ```commandline
